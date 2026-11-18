@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+.env
+.tmp
+__pycache__
+*.py[cod]
+*.log
+*.tar
+energy_dataset.zip
+iiitd_calender_schedule.zip
+IIITD_occupancy_dataset.zip
+node_modules
+outputs

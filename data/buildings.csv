@@ -1,0 +1,8 @@
+building_code,building_name,building_type,floors,area_m2,source_area_sqft
+academic,Academic building,Academic,5,5695.7,61308
+lecture,Lecture building,Teaching,3,1630.26,17548
+library,Library,Library,4,2452.73,26401
+facilities,Facilities building,Facilities,3,907.57,9769
+dining,Dining building,Dining,4,4662.9,50191
+boys_dormitory,Boys dormitory,Residential,6,6758.23,72745
+girls_dormitory,Girls dormitory,Residential,4,3542.02,38126

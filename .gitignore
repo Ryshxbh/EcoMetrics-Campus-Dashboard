@@ -1,0 +1,13 @@
+.env
+.venv/
+.tmp/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.log
+*.tar
+energy_dataset.zip
+iiitd_calender_schedule.zip
+IIITD_occupancy_dataset.zip
+**/~$*
+outputs/EcoMetrics_Campus_Dashboard_Project_Report.docx

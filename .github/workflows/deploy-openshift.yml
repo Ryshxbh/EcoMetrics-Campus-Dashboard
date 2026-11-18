@@ -1,0 +1,79 @@
+name: Deploy to OpenShift
+
+on:
+  workflow_run:
+    workflows: [Publish images]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Image tag published by the Publish images workflow
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecometrics-openshift-rollout
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out deployment manifests
+        uses: actions/checkout@v4
+      - name: Check cluster configuration
+        id: cluster
+        shell: bash
+        env:
+          SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+          TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+          NAMESPACE: ${{ secrets.OPENSHIFT_NAMESPACE }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ -z "$SERVER" || -z "$TOKEN" || -z "$NAMESPACE" ]]; then
+            if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+              echo "Manual deployment requires OPENSHIFT_SERVER, OPENSHIFT_TOKEN, and OPENSHIFT_NAMESPACE." >&2
+              exit 1
+            fi
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "OpenShift secrets are not configured; image publishing succeeded and cluster rollout was skipped."
+            exit 0
+          fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+      - name: Log in to OpenShift
+        if: steps.cluster.outputs.configured == 'true'
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
+          openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
+          namespace: ${{ secrets.OPENSHIFT_NAMESPACE }}
+      - name: Apply application resources
+        if: steps.cluster.outputs.configured == 'true'
+        run: |
+          oc apply -f openshift/config.yaml
+          oc apply -f openshift/database.yaml
+          oc apply -f openshift/api.yaml
+          oc apply -f openshift/web.yaml
+          oc apply -f openshift/route.yaml
+      - name: Roll out the published images
+        if: steps.cluster.outputs.configured == 'true'
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            IMAGE_TAG="$INPUT_IMAGE_TAG"
+          else
+            IMAGE_TAG="sha-$HEAD_SHA"
+          fi
+          oc set image deployment/ecometrics-api api=ghcr.io/${OWNER}/ecometrics-api:${IMAGE_TAG}
+          oc set image deployment/ecometrics-web web=ghcr.io/${OWNER}/ecometrics-web:${IMAGE_TAG}
+          oc rollout status deployment/ecometrics-api --timeout=5m
+          oc rollout status deployment/ecometrics-web --timeout=5m

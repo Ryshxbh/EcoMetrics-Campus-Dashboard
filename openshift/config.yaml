@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecometrics-config
+data:
+  POSTGRESQL_DATABASE: ecometrics
+  POSTGRESQL_USER: ecometrics
+  DB_HOST: ecometrics-db
+  DB_PORT: "5432"
+  DB_NAME: ecometrics
+  DB_USER: ecometrics
+  TZ: Asia/Kolkata

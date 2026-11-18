@@ -1,0 +1,14 @@
+{
+  "source": "I-BLEND / IIIT-Delhi",
+  "timezone": "Asia/Kolkata",
+  "selected_start": "2013-08-10 00:00:00",
+  "selected_end": "2017-12-31 23:00:00",
+  "source_rows_scanned": 2310568,
+  "hourly_building_records": 269640,
+  "building_count": 7,
+  "complete_hours": 225650,
+  "partial_hours": 2861,
+  "missing_hours": 41129,
+  "statistical_spikes_for_review": 4603,
+  "reproduction_command": "python scripts/prepare_dataset.py --energy-archive energy_dataset.zip --calendar-archive iiitd_calender_schedule.zip"
+}
